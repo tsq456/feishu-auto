@@ -43,6 +43,11 @@ exports.handler = async (event) => {
       return response(200, cardToast("success", "已提交分析指令"));
     }
 
+    if (eventType === "im.message.receive_v1") {
+      await handleMessageReceive(payload);
+      return response(200, {});
+    }
+
     console.log("Ignored Feishu callback:", eventType || payload.type || "unknown");
     return response(200, {});
   } catch (error) {
@@ -97,6 +102,51 @@ async function handleCardAction(payload) {
 
   await sendMessage(receiveIdType, receiveId, "text", {
     text: `/analyze ${stockCode}`
+  });
+}
+
+async function handleMessageReceive(payload) {
+  const body = payload.event || payload;
+  const message = body.message || {};
+  const sender = body.sender || {};
+
+  if (sender.sender_type === "app") {
+    return;
+  }
+
+  if (message.message_type && message.message_type !== "text") {
+    return;
+  }
+
+  const chatId = message.chat_id || body.chat_id || body.open_chat_id;
+  if (!chatId) {
+    throw publicError(400, "Cannot find message chat_id");
+  }
+
+  const text = getMessageText(message.content).trim();
+  if (!text) {
+    return;
+  }
+
+  if (/^(股票|分析|菜单|stock)$/i.test(text)) {
+    await sendMessage("chat_id", chatId, "interactive", buildStockInputCard({
+      receiveIdType: "chat_id",
+      receiveId: chatId
+    }));
+    return;
+  }
+
+  const analyzeMatch = text.match(/^\/analyze\s+(.+)$/i);
+  if (analyzeMatch) {
+    const stockCode = normalizeStockCode(analyzeMatch[1]);
+    await sendMessage("chat_id", chatId, "text", {
+      text: `已收到分析指令：/analyze ${stockCode}`
+    });
+    return;
+  }
+
+  await sendMessage("chat_id", chatId, "text", {
+    text: "请发送“股票”打开输入卡片，或直接发送 /analyze 股票代码"
   });
 }
 
@@ -328,6 +378,19 @@ function normalizeStockCode(value) {
     .replace(/\s+/g, "")
     .toUpperCase()
     .slice(0, 32);
+}
+
+function getMessageText(content) {
+  if (!content) {
+    return "";
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    return parsed.text || "";
+  } catch {
+    return String(content);
+  }
 }
 
 function getRawBody(event) {
