@@ -1,0 +1,16 @@
+{
+  "name": "feishu-stock-analyze-netlify",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Feishu bot menu and interactive card callback handler for Netlify Functions.",
+  "scripts": {
+    "dev": "netlify dev",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.38.1"
+  }
+}
