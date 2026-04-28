@@ -121,24 +121,28 @@ function buildStockInputCard(target) {
         }
       },
       {
-        tag: "input",
-        name: "stock_code",
-        label: {
-          tag: "plain_text",
-          content: "股票代码"
-        },
-        placeholder: {
-          tag: "plain_text",
-          content: "例如 AAPL、TSLA、600519、00700"
-        }
-      },
-      {
-        tag: "action",
-        actions: [
+        tag: "form",
+        name: "stock_form",
+        elements: [
+          {
+            tag: "input",
+            name: "stock_code",
+            label: {
+              tag: "plain_text",
+              content: "股票代码"
+            },
+            label_position: "top",
+            placeholder: {
+              tag: "plain_text",
+              content: "例如 AAPL、TSLA、600519、00700"
+            },
+            max_length: 32
+          },
           {
             tag: "button",
             type: "primary",
             name: "submit_stock_code",
+            action_type: "form_submit",
             text: {
               tag: "plain_text",
               content: "提交"
